@@ -1,0 +1,269 @@
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Add the jars in WebContent->WEB-INF->lib
+Add mysql connector in lib .
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+console tab-> server tab-> add tomcat server and choose the proper directory.
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+create a xml file (dispatcher-servlet.xml)  in webcontent->webinf
+copy from xml file from other project
+line 16
+ <context:component-scan base-package="com.cg.spring"></context:component-scan>  //pacakage name extension
+
+line 25-28
+<property name="driverClassName" value="com.mysql.jdbc.Driver" />
+		<property name="url" value="jdbc:mysql://localhost:3306/fullstack" />   //database name
+		<property name="username" value="root" />
+		<property name="password" value="Capgemini123" />
+		
+line 39
+		<entry key="hibernate.dialect" value="org.hibernate.dialect.MySQL5Dialect"/>
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+CREATE PACKAGES IN JAVA RESOURCES->src
+
+com.cg.spring.controller
+com.cg.spring.dao
+com.cg.spring.dto
+com.cg.spring.service
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+DTO PACKAGE
+
+	create a class employee 
+	
+	Add annotation to the class name
+		@Entity
+		@Table(name="employee")
+		public class Employee
+	
+	Create private members(id, name,salary...)
+		if you want to change the name of column then add the annotation as  @Column(name="emp_name")
+	
+	choose a unique member and add annotation @Id
+	
+	Add 
+		Constructor
+		Constructor with parameter
+		getter and setter
+		to string method
+
+
+		
+		
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+IN DAO PACKAGE
+
+
+	create an interface [EmployeeDao ]
+	create a class    [EmployeeDaoImp]
+
+	in interface EmployeeDao
+			public void addEmployee(Employee e);
+			public List<Employee> showEmployee(); 
+			
+		
+	in class EmployeeDaoImp
+	
+		add annotation to the class
+		@Repository("employeedao")
+		
+		
+		create an object for EntityManager and add annotation
+		@Autowired
+		@PersistenceContext
+		EntityManager entityManager;          
+		
+		
+		addEmployee(Employee e)
+			entityManager.persist(e);
+		
+		showEmployee()
+			List<Employee> list = new ArrayList<Employee>();
+			Query q = entityManager.createQuery("from employee");
+			list = q.getResultList();
+			return list;
+		
+
+	
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+IN SERVICE PACKAGE
+
+
+	create an interface [EmployeeService]
+	create a class [EmployeeServiceImple]
+
+	in interface EmployeeService
+		public void addEmployee(Employee e);
+		public List<Employee> showEmployee(); 
+		
+
+	in class EmployeeServiceImple
+
+
+		add annotation to class
+			@Service("employeeservice")
+			@Transactional
+			public class EmployeeServiceImple implements EmployeeService
+
+		create an object for dao interface and add annotation
+			@Autowired
+			EmployeeDao employeeDao;
+
+		in addEmployee(Employee e) 
+			employeeDao.addEmployee(e)				//call dao method
+			
+			
+			
+		in showEmployee()
+			return employeeDao.showEmployee();  	//call dao method
+		
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+
+IN CONTROLLER PACKAGE
+
+
+	add annotation to the class
+		@Controller
+		public class EmployeeController
+
+
+	create a class for EmployeeService and add annotation
+		@Autowired
+		EmployeeService employeeService;
+
+
+	create three methods as
+	
+		@RequestMapping(value = "/showall", method = RequestMethod.GET)
+		public ModelAndView getAllEmployee() {
+		List<Employee> list = employeeService.showEmployee();
+		return new ModelAndView("show", "emps", list); // list is assigned to emps, it will load show.jsp
+		}
+		
+		
+		
+		@RequestMapping(value="/add", method=RequestMethod.GET)
+		public String myEmployee(@ModelAttribute("emp") Employee emp)
+		{
+			return "add_employee";
+		}
+
+		
+		
+		@RequestMapping(value = "addemployee", method = RequestMethod.POST)
+		public String addEmployee(@ModelAttribute("emp") Employee emp) {
+		employeeService.addEmployee(emp);
+		return "redirect:/showall";
+		}
+
+	
+		
+		
+
+		
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+JSP PAGES
+
+	In WebCOntent create following jsp pages
+		index.jsp
+		add_employee.jsp
+		show.jsp
+		
+		
+	In index.jsp
+		Inside body tag add the links as
+			<a href="showall">View Employee</a><br>
+			<a href="add_employee.jsp">Add Employee</a>
+
+    In add_employee.jsp
+		Add the line in starting of the file
+			<%@ taglib uri="http://www.springframework.org/tags/form" prefix="f"%>
+
+		Inside body tag
+			<f:form action="addemployee" method="post" modelAttribute="emp">
+			<f:input path="id" />
+			<f:input path="name" />
+			<f:input path="salary" />
+			<input type="submit" value="Add">
+
+			</f:form>
+		
+		
+	In show.jsp
+		Add the line in starting of the file
+			 <%@ taglib  uri = "http://java.sun.com/jsp/jstl/core" prefix="a"%>
+			 
+		Inside body Tag		 
+			<table>
+			<tr>
+			<th>ID</th>
+			<th> Name</th>
+			<th>  Salary</th>
+			</tr>
+			<a:forEach items="${emps}" var="emp">
+			<tr>
+			<td>${emp.id}</td>
+			<td>${emp.name}</td>
+			<td>${emp.salary}</td>
+			</tr>
+			</a:forEach>
+			</table>
+			
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+IN web.xml file (find it in WEBINF folder)
+
+	in line no 22
+		<param-value>/WEB-INF/dispacher-servlet.xml</param-value>    //same as created xml file name
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+for validation
+
+	@Id
+	@Column(name="emp_id")
+	@NotNull(message="id is required")
+	private int id;
+	@Column(name="emp_name")
+	@NotNull(message="name is required")
+	private String name;
+	@Column(name="emp_salary")
+	private double salary;
+
+
+
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+NOTES:-
+
+dao will work as repo
+
+
+if not working add listener tag in commnet(the listener tag found in web.xml file)
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------
